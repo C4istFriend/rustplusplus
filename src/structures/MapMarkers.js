@@ -70,6 +70,7 @@ class MapMarkers {
 
         /* Vending Machine variables */
         this.knownVendingMachines = [];
+        this.lastVendingMachineCount = 0;
 
         this.updateMapMarkers(mapMarkers);
     }
@@ -264,6 +265,7 @@ class MapMarkers {
         this.updateVendingMachines(mapMarkers);
         this.updateGenericRadiuses(mapMarkers);
         this.updateTravelingVendors(mapMarkers);
+        this.updateDeepSea(mapMarkers);
     }
 
     updatePlayers(mapMarkers) {
@@ -779,6 +781,31 @@ class MapMarkers {
             travelingVendor.y = marker.y;
             travelingVendor.location = pos;
         }
+    }
+
+    updateDeepSea(mapMarkers) {
+        const DiscordMessages = require('../discordTools/discordMessages.js');
+
+        const vms = mapMarkers.markers.filter(m => m.type === 3);
+        const newCount = vms.length;
+
+        if (this.lastVendingMachineCount !== 0 && newCount > this.lastVendingMachineCount + 8) {
+            const sampleMarker = vms[newCount - 1];
+            const mapSize = this.rustplus.info.correctedMapSize;
+            const pos = Map.getPos(sampleMarker.x, sampleMarker.y, mapSize, this.rustplus);
+            const direction = pos.string.split(' ')[0].toUpperCase();
+
+            DiscordMessages.sendDiscordEventMessage(
+                this.rustplus.guildId,
+                this.rustplus.serverId,
+                `⚓ **Deep Sea Event Started! at **${direction}**`,
+                "#00aaff"
+            );
+
+            this.rustplus.sendInGameMessage(`Deep Sea Event Started! at ${direction}`);
+        }
+
+        this.lastVendingMachineCount = newCount;
     }
 
 
